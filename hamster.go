@@ -3,8 +3,10 @@ package hamster
 import (
     "database/sql"
     "encoding/csv"
+    "fmt"
     "io"
     "os"
+    "strings"
 
     "github.com/pkg/errors"
 )
@@ -16,6 +18,11 @@ type Hamster struct {
 
 type Option struct{}
 
+type Food struct {
+    table    string
+    filepath string
+}
+
 func New(db *sql.DB, option *Option) *Hamster {
     return &Hamster{
         db:     db,
@@ -23,7 +30,35 @@ func New(db *sql.DB, option *Option) *Hamster {
     }
 }
 
-func (ham *Hamster) Stuff(filePath, table string) error {
+func (ham *Hamster) Stuff(feed []*Food) error {
+    return nil
+}
+
+func (ham *Hamster) importData(table string, columns []string, rows [][]string) error {
+    colStrings := make([]string, len(columns))
+    for i := range columns {
+        colStrings[i] = "?"
+    }
+    colStringSet := fmt.Sprintf("(%s)", strings.Join(colStrings, ","))
+
+    valStrings := make([]string, len(rows))
+    values := make([]interface{}, 0, len(columns)*len(rows))
+    for i, row := range rows {
+        valStrings[i] = colStringSet
+
+        for _, cell := range row {
+            values = append(values, cell)
+        }
+    }
+
+    if _, err := ham.db.Exec(fmt.Sprintf("TRUNCATE TABLE %s", table)); err != nil {
+        return errors.Wrap(err, "error exec query")
+    }
+
+    stmt := fmt.Sprintf("INSERT INTO %s (%s) VALUES %s", table, strings.Join(columns, ","), strings.Join(valStrings, ","))
+    if _, err := ham.db.Exec(stmt, values...); err != nil {
+        return errors.Wrap(err, "error exec query")
+    }
     return nil
 }
 
