@@ -30,7 +30,7 @@ func TestStaff(t *testing.T) {
             Input: []*Food{
                 {
                     Table:    testTables[0],
-                    Filepath: "./test/sample.csv",
+                    Filepath: "./test/sample01.csv",
                 },
             },
             ExpectedCounts: []int{3},
@@ -158,7 +158,7 @@ func Test_importData(t *testing.T) {
 }
 
 func Test_loadCSV(t *testing.T) {
-    testFilePath := "./test/sample.csv"
+    testFilePath := "./test/sample01.csv"
 
     expectedColumns := []string{
         "id",
