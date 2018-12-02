@@ -10,7 +10,7 @@ Load CSV and insert to database
 
 ```go
 
-ham := hamser.New(db, &hamster.Option{})
+ham := hamster.New(db, &hamster.Option{})
 feed := []*hamster.Food{
     {
         Table:    "hamsters",
