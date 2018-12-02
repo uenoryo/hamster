@@ -5,6 +5,7 @@ import (
     "encoding/csv"
     "fmt"
     "io"
+    "log"
     "os"
     "strings"
 
@@ -45,6 +46,8 @@ func (ham *Hamster) Stuff(feed []*Food) error {
         if err := ham.importData(f.Table, columns, rows); err != nil {
             return errors.Wrap(err, "error import data")
         }
+
+        log.Printf("[DONE] imported %s\n", f.Table)
     }
 
     tx.Commit()
