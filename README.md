@@ -11,7 +11,7 @@ Load CSV and insert to database
 ```go
 
 ham := hamser.New(db, &hamster.Option{})
-feed := []*Food{
+feed := []*hamster.Food{
     {
         Table:    "hamsters",
         Filepath: "./data/sample01.csv",
