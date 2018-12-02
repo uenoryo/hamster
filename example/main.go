@@ -15,8 +15,8 @@ func main() {
     }
     defer db.Close()
 
-    ham := hamser.New(db, &hamster.Option{})
-    feed := []*Food{
+    ham := hamster.New(db, &hamster.Option{})
+    feed := []*hamster.Food{
         {
             Table:    "hamsters",
             Filepath: "./data/sample01.csv",
