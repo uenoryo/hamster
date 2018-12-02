@@ -17,7 +17,7 @@ func TestStaff(t *testing.T) {
     }
     defer db.Close()
 
-    testTables := []string{"hamsters"}
+    testTables := []string{"hamsters", "feed"}
 
     type Test struct {
         Input          []*Food
@@ -32,10 +32,17 @@ func TestStaff(t *testing.T) {
                     Table:    testTables[0],
                     Filepath: "./test/sample01.csv",
                 },
+                {
+                    Table:    testTables[1],
+                    Filepath: "./test/sample02.csv",
+                },
             },
-            ExpectedCounts: []int{3},
+            ExpectedCounts: []int{3, 5},
             InitFunc: func() {
                 if _, err := db.Exec(fmt.Sprintf("CREATE TABLE %s(id int, name varchar(20), kind varchar(20))", testTables[0])); err != nil {
+                    t.Fatal("error exec query", err.Error())
+                }
+                if _, err := db.Exec(fmt.Sprintf("CREATE TABLE %s(id int, name varchar(20), price int)", testTables[1])); err != nil {
                     t.Fatal("error exec query", err.Error())
                 }
             },
