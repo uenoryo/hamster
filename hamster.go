@@ -19,8 +19,8 @@ type Hamster struct {
 type Option struct{}
 
 type Food struct {
-    table    string
-    filepath string
+    Table    string
+    Filepath string
 }
 
 func New(db *sql.DB, option *Option) *Hamster {
@@ -31,6 +31,23 @@ func New(db *sql.DB, option *Option) *Hamster {
 }
 
 func (ham *Hamster) Stuff(feed []*Food) error {
+    tx, err := ham.db.Begin()
+    if err != nil {
+        return errors.Wrap(err, "error begin transaction")
+    }
+
+    for _, f := range feed {
+        columns, rows, err := ham.loadCSV(f.Filepath)
+        if err != nil {
+            return errors.Wrap(err, "error load csv")
+        }
+
+        if err := ham.importData(f.Table, columns, rows); err != nil {
+            return errors.Wrap(err, "error import data")
+        }
+    }
+
+    tx.Commit()
     return nil
 }
 
