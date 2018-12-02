@@ -10,14 +10,83 @@ import (
     _ "github.com/go-sql-driver/mysql"
 )
 
-func Test_importData(t *testing.T) {
+func TestStaff(t *testing.T) {
     db, err := sql.Open("mysql", "root:root@tcp(127.0.0.1:3306)/hamster?charset=utf8")
     if err != nil {
         t.Fatal("error sql open", err.Error())
     }
     defer db.Close()
 
-    ham := New(db, &Option{})
+    testTables := []string{"hamsters"}
+
+    type Test struct {
+        Input          []*Food
+        ExpectedCounts []int
+        InitFunc       func()
+    }
+
+    tests := []Test{
+        {
+            Input: []*Food{
+                {
+                    Table:    testTables[0],
+                    Filepath: "./test/sample.csv",
+                },
+            },
+            ExpectedCounts: []int{3},
+            InitFunc: func() {
+                if _, err := db.Exec(fmt.Sprintf("CREATE TABLE %s(id int, name varchar(20), kind varchar(20))", testTables[0])); err != nil {
+                    t.Fatal("error exec query", err.Error())
+                }
+            },
+        },
+    }
+
+    for i, test := range tests {
+        t.Run(fmt.Sprintf("case %d", i), func(t *testing.T) {
+            defer func() {
+                for _, ipt := range test.Input {
+                    if _, err := db.Exec(fmt.Sprintf("DROP TABLE %s", ipt.Table)); err != nil {
+                        t.Fatal("error exec query", err.Error())
+                    }
+                }
+            }()
+
+            test.InitFunc()
+
+            ham := New(db, &Option{})
+            if err := ham.Stuff(test.Input); err != nil {
+                t.Fatal("error stuff", err.Error())
+            }
+
+            for i, ipt := range test.Input {
+                rows, err := db.Query(fmt.Sprintf("SELECT COUNT(*) as count FROM %s", ipt.Table))
+                if err != nil {
+                    t.Fatal("error exec query", err.Error())
+                }
+                defer rows.Close()
+
+                var count int
+                for rows.Next() {
+                    if err := rows.Scan(&count); err != nil {
+                        t.Fatal("error scan", err.Error())
+                    }
+                }
+
+                if g, w := count, test.ExpectedCounts[i]; g != w {
+                    t.Errorf("error table %s data count %d, want %d", ipt.Table, g, w)
+                }
+            }
+        })
+    }
+}
+
+func Test_importData(t *testing.T) {
+    db, err := sql.Open("mysql", "root:root@tcp(127.0.0.1:3306)/hamster?charset=utf8")
+    if err != nil {
+        t.Fatal("error sql open", err.Error())
+    }
+    defer db.Close()
 
     inputColumns := []string{
         "id",
@@ -44,15 +113,16 @@ func Test_importData(t *testing.T) {
     inputTable := "hamsters"
 
     defer func() {
-        if _, err := ham.db.Exec(fmt.Sprintf("DROP TABLE %s", inputTable)); err != nil {
+        if _, err := db.Exec(fmt.Sprintf("DROP TABLE %s", inputTable)); err != nil {
             t.Fatal("error exec query", err.Error())
         }
     }()
 
-    if _, err := ham.db.Exec(fmt.Sprintf("CREATE TABLE %s(id int, name varchar(20), kind varchar(20))", inputTable)); err != nil {
+    if _, err := db.Exec(fmt.Sprintf("CREATE TABLE %s(id int, name varchar(20), kind varchar(20))", inputTable)); err != nil {
         t.Fatal("error exec query", err.Error())
     }
 
+    ham := New(db, &Option{})
     if err := ham.importData(inputTable, inputColumns, inputRows); err != nil {
         t.Fatal("error import data", err.Error())
     }
