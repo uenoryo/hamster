@@ -75,9 +75,11 @@ func (ham *Hamster) importData(table string, columns []string, rows [][]string) 
         return errors.Wrap(err, "error exec query")
     }
 
-    stmt := fmt.Sprintf("INSERT INTO %s (%s) VALUES %s", table, strings.Join(columns, ","), strings.Join(valStrings, ","))
-    if _, err := ham.db.Exec(stmt, values...); err != nil {
-        return errors.Wrap(err, "error exec query")
+    if len(valStrings) > 0 {
+        stmt := fmt.Sprintf("INSERT INTO %s (%s) VALUES %s", table, strings.Join(columns, ","), strings.Join(valStrings, ","))
+        if _, err := ham.db.Exec(stmt, values...); err != nil {
+            return errors.Wrap(err, "error exec query")
+        }
     }
     return nil
 }
